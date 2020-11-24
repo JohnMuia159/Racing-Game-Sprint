@@ -4,59 +4,107 @@ using UnityEngine;
 
 public class WallRun : MonoBehaviour
 {
+    CharacterController col;
     PlayerMovement m_player;
     public LayerMask whatIsWall;
-    public float wallRunForce, maxWallRunTime, maxWallSpeed;
-    bool isWallRight, isWallLeft, isWallRunning;
-
+    public float wallRunForce, maxWallRunTime, maxWallSpeed, maxWallRunTimer;
+    public bool isWallRight, isWallLeft, isWallRunning, wallJumped;
+    public int wallJumpCounter;
 
     // Start is called before the first frame update
     void Start()
     {
+
+        col = GetComponent<CharacterController>();
         m_player = GetComponent<PlayerMovement>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!m_player.isGhosted)
+            whatIsWall = LayerMask.GetMask("Wall", "Objects");
+        else if (m_player.isGhosted)
+            whatIsWall = LayerMask.GetMask("Wall");
+
         CheckForWall();
         WallRunInput();
+        WallJumps();
+
+        maxWallRunTimer -= Time.deltaTime;
+
+        if (isWallRunning)
+            if (isWallLeft && Input.GetKeyDown(KeyCode.Space) && !wallJumped)
+            {
+                m_player.velocity.y = Mathf.Sqrt(m_player.jumpHeight * -2 * -9.8f);
+                wallJumpCounter++;
+                wallJumped = true;
+            }
+            else if (isWallRight && Input.GetKeyDown(KeyCode.Space) && !wallJumped)
+            {
+                m_player.velocity.y = Mathf.Sqrt(m_player.jumpHeight * -2 * -9.8f);
+                wallJumpCounter++;
+                wallJumped = true;
+            }
+
+
+        if (m_player.IsGrounded() && !isWallRunning)
+            maxWallRunTimer = maxWallRunTime;
 
     }
+
 
     public void WallRunInput()
     {
         //Start Wallrun
-        if (Input.GetKey(KeyCode.D) && isWallRight)
+        if (isWallRight && !m_player.IsGrounded())
             StartWallRun();
-        if (Input.GetKey(KeyCode.A) && isWallLeft)
+        if (isWallLeft && !m_player.IsGrounded())
             StartWallRun();
 
     }
     public void StartWallRun()
     {
-        m_player.gravity = 0;
+
         isWallRunning = true;
+       // m_player.velocity.y += -m_player.gravity * -1.5f / (float)wallJumpCounter * Time.deltaTime;
         if (m_player.velocity.magnitude <= maxWallSpeed)
         {
-            m_player.controller.Move(Vector3.forward * wallRunForce * Time.deltaTime);
+            m_player.controller.Move(transform.forward * wallRunForce / 2 * Time.deltaTime);
             if (isWallRight)
-                m_player.controller.Move(Vector3.right * wallRunForce / 5 * Time.deltaTime);
+                m_player.controller.Move(transform.right * wallRunForce / 7 * Time.deltaTime);
             else
-                m_player.controller.Move(Vector3.left * wallRunForce / 5 * Time.deltaTime);
+                m_player.controller.Move(-transform.right * wallRunForce / 7 * Time.deltaTime);
         }
 
     }
 
     public void StopWallRun()
     {
-        m_player.gravity = -9.8f;
         isWallRunning = false;
+        WallRunInput();
+        wallJumped = false;
     }
     public void CheckForWall()
     {
-        isWallRight = Physics.Raycast(transform.position, Vector3.right, 1f, whatIsWall);
-        isWallLeft = Physics.Raycast(transform.position, Vector3.left, 1f, whatIsWall);
+        isWallRight = Physics.Raycast(new Vector3(col.bounds.center.x, col.bounds.center.y, col.bounds.center.z), transform.right, 1f, whatIsWall);
+        isWallLeft = Physics.Raycast(new Vector3(col.bounds.center.x, col.bounds.center.y, col.bounds.center.z), -transform.right, 1f, whatIsWall);
+        Debug.DrawRay(new Vector3(col.bounds.center.x, col.bounds.center.y, col.bounds.center.z), transform.right, Color.red);
+        Debug.DrawRay(new Vector3(col.bounds.center.x, col.bounds.center.y, col.bounds.center.z), -transform.right, Color.red);
+  
+
+        //leave wall run
+        if (!isWallLeft && !isWallRight || m_player.IsGrounded())
+            StopWallRun();
+
+    }
+
+    public void WallJumps()
+    {
+        if (wallJumped)
+        {
+            WallRunInput();
+        }
     }
 
 }

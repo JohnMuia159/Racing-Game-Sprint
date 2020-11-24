@@ -11,6 +11,7 @@ public class PlayerMovement : MonoBehaviour
 {
     public CharacterController controller;
     public Transform cam;
+    public WallRun wallrun;
 
     public bool isWalkingDisabled;
     public GameObject[] objects;
@@ -23,6 +24,7 @@ public class PlayerMovement : MonoBehaviour
 
     //Ghost Powerup
     public bool ghostPowerUp;
+    public bool isGhosted;
 
     public float speed = 6;
     public float gravity = -9.81f;
@@ -40,6 +42,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void Start()
     {
+        wallrun = GetComponent<WallRun>();
         col = GetComponent<CapsuleCollider>();
         groundMask = LayerMask.GetMask("Ground", "Terrain");
         ghostMask = LayerMask.GetMask("Objects");
@@ -83,26 +86,56 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (isWalkingDisabled)
         {
-            speed = 8;
+            speed = 14;
             return true;
         }     
         return false;
+    }
+
+    public bool IsWallRunning()
+    {
+        if (wallrun.isWallRunning)
+            return true;
+        else
+            return false;
+    }
+
+    public bool IsWallLeft()
+    {
+        if (wallrun.isWallLeft && !wallrun.isWallRight)
+            return true;
+        else
+            return false;
+    }
+    public bool IsWallRight()
+    {
+        if (wallrun.isWallRight && !wallrun.isWallLeft)
+            return true;
+        else
+            return false;
     }
 
     // Update is called once per frame
     void Update()
     {
         //jump
-        IsWalking();
         IsGrounded();
+        IsWalking();
         IsRunning();
+        Jump();
 
         objects = GameObject.FindGameObjectsWithTag("Objects");
 
         powerUpTimer -= Time.deltaTime;
 
-        if (Input.GetKeyDown(KeyCode.Z) && speedUpPower || Input.GetKeyDown(KeyCode.Z) && ghostPowerUp)
+        if (Input.GetKeyDown(KeyCode.Z) && speedUpPower)
             pressedPowerUp = true;
+        else if (Input.GetKeyDown(KeyCode.Z) && ghostPowerUp)
+        {
+            pressedPowerUp = true;
+            isGhosted = true;
+        }
+
 
         if (ghostPowerUp && pressedPowerUp)
         {
@@ -133,17 +166,20 @@ public class PlayerMovement : MonoBehaviour
             isWalkingDisabled = false;
             pressedPowerUp = false;
             ghostPowerUp = false;
+            isGhosted = false;
         }
 
         if (IsGrounded() && velocity.y < 0)
         {
             velocity.y = -2f;
+            wallrun.wallJumped = false;
         }
 
-        if (Input.GetButtonDown("Jump") && IsGrounded())
+        if (wallrun.wallJumped)
         {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity);
+            velocity.y += gravity * 05f * Time.deltaTime;
         }
+
         //gravity
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
@@ -163,10 +199,20 @@ public class PlayerMovement : MonoBehaviour
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
         }
     }
-
-    public void OnDrawGizmos()
+    
+    public void Jump()
     {
-        Gizmos.DrawSphere(groundCheck.position, groundDistance);
-        Gizmos.DrawSphere(transform.position, 15);
+        if (Input.GetButtonDown("Jump") && IsGrounded())
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity);
+        }
     }
+
+    //public void OnDrawGizmos()
+    //{
+    //    Gizmos.DrawSphere(groundCheck.position, groundDistance);
+    //    Gizmos.DrawSphere(transform.position, 15);
+    //    Gizmos.DrawLine(transform.position, Vector3.right);
+    //    Gizmos.DrawLine(transform.position, Vector3.left);
+    //}
 }

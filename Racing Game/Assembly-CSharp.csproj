@@ -63,11 +63,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\AurynSky\Gems Ultimate Pack\Scripts\AnimationScript.cs" />
     <Compile Include="Assets\Scenes\Scripts\CharacterGraphicsController.cs" />
     <Compile Include="Assets\Scenes\Scripts\Ghost.cs" />
     <Compile Include="Assets\Scenes\Scripts\PlayerMovement.cs" />
     <Compile Include="Assets\Scenes\Scripts\SpeedUp.cs" />
     <Compile Include="Assets\Scenes\Scripts\WallRun.cs" />
+    <None Include="Assets\AurynSky\Gems Ultimate Pack\READ ME.txt" />
     <Reference Include="UnityEngine">
       <HintPath>D:/Program Files (x86)/Unity Stuff/2019.4.11f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
